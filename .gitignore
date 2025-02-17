@@ -6,3 +6,5 @@ run.bat
 
 # Ignore .env file
 .env
+
+__pycache__/
