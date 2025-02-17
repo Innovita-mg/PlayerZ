@@ -1,0 +1,5 @@
+# Ignore shell script
+run.sh
+
+# Ignore batch script
+run.bat 
