@@ -3,3 +3,6 @@ run.sh
 
 # Ignore batch script
 run.bat 
+
+# Ignore .env file
+.env
