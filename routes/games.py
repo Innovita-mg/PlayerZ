@@ -2,12 +2,38 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import text
 from sqlalchemy.future import select
-from sqlalchemy import insert, delete
+from sqlalchemy import insert, delete, Column, Integer, String
 from pydantic import BaseModel
 from typing import List
 import database
+from sqlalchemy.ext.declarative import declarative_base
 
 router = APIRouter()
+
+Base = declarative_base()
+
+class Group(Base):
+    __tablename__ = 'groupes'
+    __table_args__ = {'schema': 'playerz'}
+    id = Column(Integer, primary_key=True)
+    # Add other fields as necessary
+
+class GroupModel(BaseModel):
+    id: int
+    # Add other fields as necessary
+
+class Player(Base):
+    __tablename__ = 'players'
+    __table_args__ = {'schema': 'playerz'}
+    id = Column(Integer, primary_key=True)
+    # Add other fields as necessary
+
+class PlayerGroup(Base):
+    __tablename__ = 'player_groupes'
+    __table_args__ = {'schema': 'playerz'}
+    player_id = Column(Integer, primary_key=True)
+    groupe_id = Column(Integer, primary_key=True)
+    # Add other fields as necessary
 
 # Define Pydantic models
 class MatchCreate(BaseModel):
@@ -27,6 +53,10 @@ class PlayerGroupAdd(BaseModel):
     player_id: int
     groupe_id: int
 
+class PlayerGroupAddMultiple(BaseModel):
+    player_ids: List[int]
+    groupe_id: int
+    
 @router.get("/session/{id}")
 async def get_all_session_of_tournament(id: int, db: AsyncSession = Depends(database.get_db)):
     try:
@@ -161,3 +191,50 @@ async def get_players_in_group(groupe_id: int, db: AsyncSession = Depends(databa
         return {"players": [dict(player) for player in players]}
     except Exception as e:
         raise HTTPException(status_code=500, detail="Internal server error")
+
+@router.post("/player/groupe/add_multiple")
+async def add_players_to_group(data: PlayerGroupAddMultiple, db: AsyncSession = Depends(database.get_db)):
+    try:
+        # Check if the group exists
+        group_query = select(Group).where(Group.id == data.groupe_id)
+        group_result = await db.execute(group_query)
+        group_exists = group_result.scalar()
+
+        if not group_exists:
+            raise HTTPException(status_code=404, detail="GROUP NOT FOUND")
+
+        # Insert multiple players into group
+        for player_id in data.player_ids:
+            # Check if the player exists
+            player_query = select(Player).where(Player.id == player_id)
+            player_result = await db.execute(player_query)
+            player_exists = player_result.scalar()
+
+            if not player_exists:
+                raise HTTPException(status_code=404, detail=f"Player with ID {player_id} not found")
+            
+            # Insert player into group
+            query = insert(PlayerGroup).values(
+                player_id=player_id,
+                groupe_id=data.groupe_id
+            )
+            await db.execute(query)
+        
+        # Remove duplicates
+        delete_duplicates_query = text("""
+            DELETE FROM playerz.player_groupes
+            WHERE ctid NOT IN (
+                SELECT min(ctid)
+                FROM playerz.player_groupes
+                GROUP BY player_id, groupe_id
+            )
+        """)
+        await db.execute(delete_duplicates_query)
+
+        await db.commit()
+        return {"message": "SUCCESS"}
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
