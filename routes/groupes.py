@@ -3,7 +3,7 @@ from sqlalchemy import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import text
 import database
-from routes.games import PlayerGroupAddMultiple
+from routes.games import PlayerGroupAddMultiple, add_players_to_group
 
 router = APIRouter()
 
@@ -84,11 +84,23 @@ async def delete_groupe(id: int, db: AsyncSession = Depends(database.get_db)):
 @router.put("/{id}")
 async def update_groupe(id: int, groupe_data: dict, db: AsyncSession = Depends(database.get_db)):
     try:
-        set_clause = ", ".join([f"{key} = :{key}" for key in groupe_data.keys()])
+        # Mettre à jour les données du groupe
+        set_clause = ", ".join([f"{key} = :{key}" for key in groupe_data.keys() if key != "player_ids"])
         query = text(f"UPDATE playerz.groupes SET {set_clause} WHERE id = :id")
         await db.execute(query, {**groupe_data, "id": id})
+        
+        # Supprimer les joueurs existants du groupe
+        delete_query = text("DELETE FROM player_groupes WHERE groupe_id = :id")
+        await db.execute(delete_query, {"id": id})
+        
+        # Ajouter de nouveaux joueurs au groupe
+        player_ids = groupe_data.get("player_ids", [])
+        if player_ids:
+            await add_players_to_group(PlayerGroupAddMultiple(groupe_id=id, player_ids=player_ids), db)
+        
         await db.commit()
         
+        # Récupérer les joueurs mis à jour pour le groupe
         groupe_data['players'] = await get_players_for_groupe(id, db)
         
         return {"message": "SUCCES", "groupe_data": groupe_data}
