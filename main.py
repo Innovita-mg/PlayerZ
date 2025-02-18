@@ -22,7 +22,7 @@ async def read_root():
 
 
 # Définition du répertoire des fichiers
-upload_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../..", "uploads", "files"))
+upload_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "uploads", "files"))
 
 @app.post("/upload-image")
 async def upload_image(file: UploadFile = File(...)):
