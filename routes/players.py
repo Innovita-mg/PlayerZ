@@ -49,7 +49,7 @@ async def create_player(player_data: dict, db: AsyncSession = Depends(database.g
         new_id = result.scalar()
         await db.commit()
         
-        return {"message": "Nouvel joueur ajouté avec succès", "player_data": {**player_data, "id": new_id}}
+        return {"message": "SUCCESS", "player_data": {**player_data, "id": new_id}}
     
     except Exception as e:
         return {"error": str(e)}
@@ -60,7 +60,7 @@ async def delete_player(id: int, db: AsyncSession = Depends(database.get_db)):
         query = text("DELETE FROM playerz.players WHERE id = :id")
         await db.execute(query, {"id": id})
         await db.commit()
-        return {"message": "Joueur supprimé avec succès"}
+        return {"message": "SUCCESS"}
     
     except Exception as e:
         return {"error": str(e)}
@@ -72,7 +72,7 @@ async def update_player(id: int, player_data: dict, db: AsyncSession = Depends(d
         query = text(f"UPDATE playerz.players SET {set_clause} WHERE id = :id")
         await db.execute(query, {**player_data, "id": id})
         await db.commit()
-        return {"message": "Joueur mis à jour avec succès"}
+        return {"message": "SUCCESS"}
     
     except Exception as e:
         return {"error": str(e)}
