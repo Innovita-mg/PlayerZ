@@ -57,7 +57,6 @@ async def get_groupe_by_id(id: int, db: AsyncSession = Depends(database.get_db))
         return {"error": str(e)}
 
 @router.post("/")
-
 async def create_groupe(groupe_data: dict, db: AsyncSession = Depends(database.get_db)):
     try:
         query = text("INSERT INTO playerz.groupes (name) VALUES (:name) RETURNING id")
@@ -65,7 +64,7 @@ async def create_groupe(groupe_data: dict, db: AsyncSession = Depends(database.g
         new_id = result.scalar()
         await db.commit()
         
-        return {"message": "Nouveau groupe ajouté avec succès", "groupe_data": {**groupe_data, "id": new_id}}
+        return {"message": "SUCCES", "groupe_data": {**groupe_data, "id": new_id}}
     
     except Exception as e:
         return {"error": str(e)}
@@ -77,7 +76,7 @@ async def delete_groupe(id: int, db: AsyncSession = Depends(database.get_db)):
         query = text("DELETE FROM playerz.groupes WHERE id = :id")
         await db.execute(query, {"id": id})
         await db.commit()
-        return {"message": "Groupe supprimé avec succès"}
+        return {"message": "SUCCES"}
     
     except Exception as e:
         return {"error": str(e)}
@@ -92,7 +91,7 @@ async def update_groupe(id: int, groupe_data: dict, db: AsyncSession = Depends(d
         
         groupe_data['players'] = await get_players_for_groupe(id, db)
         
-        return {"message": "Groupe mis à jour avec succès", "groupe_data": groupe_data}
+        return {"message": "SUCCES", "groupe_data": groupe_data}
     
     except Exception as e:
         return {"error": str(e)} 
