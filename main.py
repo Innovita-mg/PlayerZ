@@ -1,6 +1,9 @@
+import mimetypes
 import os
 from fastapi import FastAPI, UploadFile, File, HTTPException, Depends
 from typing import Optional, List
+
+from fastapi.responses import FileResponse
 from cores.storage import upload_file_to_storage
 from routes.players import router as players_router
 from routes.groupes import router as groupes_router
@@ -44,3 +47,19 @@ async def upload_image(file: UploadFile = File(...)):
             status_code=500,
             detail=f"Erreur lors de l'upload du média: {str(e)}"
         )
+
+@app.get("/file/{filename}")  # Utilisation d'un paramètre dans l'URL
+async def get_file(filename: str):
+    # Endpoint pour afficher un fichier dans le navigateur
+    file_path = os.path.join(upload_dir, filename)
+
+    # Vérifier si le fichier existe et que ce n'est pas un dossier
+    if not os.path.exists(file_path) or not os.path.isfile(file_path):
+        raise HTTPException(status_code=404, detail="Fichier non trouvé ou chemin invalide")
+
+    # Détecter le type de fichier
+    media_type, _ = mimetypes.guess_type(file_path)
+    if media_type is None:
+        media_type = "application/octet-stream"  # Type par défaut si inconnu
+
+    return FileResponse(file_path, media_type=media_type)
