@@ -60,6 +60,11 @@ async def delete_player(id: int, db: AsyncSession = Depends(database.get_db)):
         query = text("DELETE FROM playerz.players WHERE id = :id")
         await db.execute(query, {"id": id})
         await db.commit()
+        
+        query = text("DELETE FROM playerz.player_groupes WHERE player_id = :id")
+        await db.execute(query, {"id": id})
+        await db.commit()
+        
         return {"message": "SUCCESS"}
     
     except Exception as e:
