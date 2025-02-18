@@ -52,6 +52,8 @@ async def upload_image(file: UploadFile = File(...)):
 async def get_file(filename: str):
     # Endpoint pour afficher un fichier dans le navigateur
     file_path = os.path.join(upload_dir, filename)
+    
+    print(file_path)
 
     # Vérifier si le fichier existe et que ce n'est pas un dossier
     if not os.path.exists(file_path) or not os.path.isfile(file_path):
