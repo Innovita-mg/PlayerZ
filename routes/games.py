@@ -253,9 +253,9 @@ async def organize_teams(player_ids: List[int] = Body(...), is_random: bool = Bo
     teams = []
     for i in range(0, len(player_ids), 2):
         if i + 1 < len(player_ids):
-            teams.append([player_ids[i], player_ids[i + 1]])
+            teams.append({"player1": player_ids[i], "player2": player_ids[i + 1]})
         else:
             # Handle the case where there's an odd number of players
-            teams.append([player_ids[i]])
+            teams.append({"player1": player_ids[i], "player2": 0})
 
     return {"teams": teams}
