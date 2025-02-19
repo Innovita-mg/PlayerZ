@@ -8,6 +8,7 @@ from typing import List
 import database
 from sqlalchemy.ext.declarative import declarative_base
 import random
+import uuid
 
 router = APIRouter()
 
@@ -252,10 +253,13 @@ async def organize_teams(player_ids: List[int] = Body(...), is_random: bool = Bo
     # Organize players into teams of two
     teams = []
     for i in range(0, len(player_ids), 2):
+        team_code = str(uuid.uuid4())
+        idd = 0
+        tournament_id = 0
         if i + 1 < len(player_ids):
-            teams.append({"player1": player_ids[i], "player2": player_ids[i + 1]})
+            teams.append({"player_one": player_ids[i], "player_two": player_ids[i + 1], "code": team_code, "idd": idd, "tournament_id": tournament_id})
         else:
             # Handle the case where there's an odd number of players
-            teams.append({"player1": player_ids[i], "player2": 0})
+            teams.append({"player_one": player_ids[i], "player_two": 0, "code": team_code, "idd": idd, "tournament_id": tournament_id})
 
-    return {"teams": teams}
+    return {"message": "SUCCES", "teams": teams}
