@@ -257,9 +257,44 @@ async def organize_teams(player_ids: List[int] = Body(...), is_random: bool = Bo
         idd = 0
         tournament_id = 0
         if i + 1 < len(player_ids):
-            teams.append({"player_one": player_ids[i], "player_two": player_ids[i + 1], "code": team_code, "idd": idd, "tournament_id": tournament_id})
+            teams.append({"player_one": player_ids[i], "player_two": player_ids[i + 1], "code": team_code, "id": idd, "tournament_id": tournament_id})
         else:
             # Handle the case where there's an odd number of players
-            teams.append({"player_one": player_ids[i], "player_two": 0, "code": team_code, "idd": idd, "tournament_id": tournament_id})
+            teams.append({"player_one": player_ids[i], "player_two": 0, "code": team_code, "id": idd, "tournament_id": tournament_id})
 
     return {"message": "SUCCES", "teams": teams}
+
+@router.post("/organize_sessions")
+async def organize_sessions(
+    team_codes: List[str] = Body(...),
+    num_sessions: int = Body(...),
+    matches_per_session: int = Body(...),
+    db: AsyncSession = Depends(database.get_db)
+):
+    if len(team_codes) < 2:
+        raise HTTPException(status_code=400, detail="At least two teams are required to organize sessions.")
+
+    if num_sessions <= 0 or matches_per_session <= 0:
+        raise HTTPException(status_code=400, detail="Number of sessions and matches per session must be greater than zero.")
+
+    # Organize matches into sessions
+    sessions = []
+    match_index = 0
+
+    for session_id in range(num_sessions):
+        session_matches = []
+        for _ in range(matches_per_session):
+            if match_index + 1 < len(team_codes):
+                session_matches.append({
+                    "team_one": team_codes[match_index],
+                    "team_two": team_codes[match_index + 1]
+                })
+                match_index += 2
+            else:
+                # Handle the case where there are not enough teams to form a match
+                break
+
+        if session_matches:
+            sessions.append({"session_id": session_id + 1, "matches": session_matches})
+
+    return {"message": "Sessions organized successfully", "sessions": sessions}
