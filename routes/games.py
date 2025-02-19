@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import text
 from sqlalchemy.future import select
@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from typing import List
 import database
 from sqlalchemy.ext.declarative import declarative_base
+import random
 
 router = APIRouter()
 
@@ -238,3 +239,23 @@ async def add_players_to_group(data: PlayerGroupAddMultiple, db: AsyncSession = 
     except Exception as e:
         await db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
+
+@router.post("/organize_teams")
+async def organize_teams(player_ids: List[int] = Body(...), is_random: bool = Body(False)):
+    if len(player_ids) < 2:
+        raise HTTPException(status_code=400, detail="At least two players are required to form a team.")
+
+    # Shuffle the player IDs if is_random is True
+    if is_random:
+        random.shuffle(player_ids)
+
+    # Organize players into teams of two
+    teams = []
+    for i in range(0, len(player_ids), 2):
+        if i + 1 < len(player_ids):
+            teams.append([player_ids[i], player_ids[i + 1]])
+        else:
+            # Handle the case where there's an odd number of players
+            teams.append([player_ids[i]])
+
+    return {"teams": teams}
