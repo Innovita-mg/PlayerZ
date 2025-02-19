@@ -14,12 +14,12 @@ async def get_all_players(db: AsyncSession = Depends(database.get_db)):
         players = result.fetchall()
         
         if not players:
-            return {"message": "Aucun joueur trouvé"}
+            return {"message": "PLAYERS_NOT_FOUND", "players": []}
         
         columns = result.keys()
         players_list = [dict(zip(columns, player)) for player in players]
         
-        return {"players": players_list}
+        return {"message": "SUCCES", "players": players_list}
     
     except Exception as e:
         return {"error": str(e)}
@@ -31,12 +31,12 @@ async def get_player_by_id(id: int, db: AsyncSession = Depends(database.get_db))
         player = result.fetchone()
         
         if player is None:
-            return {"message": "Aucun joueur trouvé"}
+            return {"message": "PLAYERS_NOT_FOUND", "player": {}}
         
         columns = result.keys()
         player_dict = dict(zip(columns, player))
         
-        return {"player": player_dict}
+        return {"message": "SUCCES", "player": player_dict}
     
     except Exception as e:
         return {"error": str(e)}

@@ -23,7 +23,7 @@ async def get_all_groupes(db: AsyncSession = Depends(database.get_db)):
         groupes = result.fetchall()
         
         if not groupes:
-            return {"message": "Aucun groupe trouvé"}
+            return {"message": "GROUPES_NOT_FOUND", "groupes": []}
         
         columns = result.keys()
         groupes_list = []
@@ -33,7 +33,7 @@ async def get_all_groupes(db: AsyncSession = Depends(database.get_db)):
             groupe_dict['players'] = await get_players_for_groupe(groupe_dict['id'], db)
             groupes_list.append(groupe_dict)
         
-        return {"groupes": groupes_list}
+        return {"message": "SUCCES", "groupes": groupes_list}
     
     except Exception as e:
         return {"error": str(e)}
@@ -45,13 +45,13 @@ async def get_groupe_by_id(id: int, db: AsyncSession = Depends(database.get_db))
         groupe = result.fetchone()
         
         if groupe is None:
-            return {"message": "Aucun groupe trouvé"}
+            return {"message": "GROUPES_NOT_FOUND", "groupe_dict": {}}
         
         columns = result.keys()
         groupe_dict = dict(zip(columns, groupe))
         groupe_dict['players'] = await get_players_for_groupe(id, db)
         
-        return {"groupe": groupe_dict}
+        return {"message": "SUCCES", "groupe": groupe_dict}
     
     except Exception as e:
         return {"error": str(e)}
