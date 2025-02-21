@@ -198,4 +198,28 @@ async def update_tournament(id: int, tournament_data: dict, db: AsyncSession = D
         return {"message": "Tournoi mis à jour avec succès"}
     
     except Exception as e:
+        return {"error": str(e)}
+
+@router.post("/{tournament_id}/add-teams")
+async def add_teams_to_tournament(tournament_id: int, body: dict, db: AsyncSession = Depends(database.get_db)):
+    try:
+        # Extract teams from the request body
+        teams = body.get("teams", [])
+        
+        # Insert teams into the specified tournament
+        for team in teams:
+            team_query = text("""
+                INSERT INTO playerz.team (tournament_id, player_one, player_two, code) 
+                VALUES (:tournament_id, :player_one, :player_two, :code)
+            """)
+            await db.execute(team_query, {"tournament_id": tournament_id, **team})
+
+        await db.commit()
+
+        # Optionally, enrich tournament data after adding teams
+        enriched_data = await enrich_tournament_data(tournament_id, db)
+
+        return {"message": "Teams added successfully", "tournament_data": enriched_data}
+
+    except Exception as e:
         return {"error": str(e)} 
