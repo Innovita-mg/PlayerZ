@@ -164,11 +164,13 @@ async def create_tournament(tournament_data: dict, db: AsyncSession = Depends(da
             # Insert matches for each session
             matches = session.get("matchs", [])
             for match in matches:
-                match_query = text("""
-                    INSERT INTO playerz.matchs (session_id, team_one, team_two) 
-                    VALUES (:session_id, :team_one, :team_two)
-                """)
-                await db.execute(match_query, {"session_id": new_session_id, **match})
+                # Ensure both team_one and team_two are present
+                if "team_one" in match and "team_two" in match:
+                    match_query = text("""
+                        INSERT INTO playerz.matchs (session_id, team_one, team_two) 
+                        VALUES (:session_id, :team_one, :team_two)
+                    """)
+                    await db.execute(match_query, {"session_id": new_session_id, **match})
 
         await db.commit()
 
