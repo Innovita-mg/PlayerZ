@@ -118,6 +118,9 @@ async def get_tournament_by_id(id: int, db: AsyncSession = Depends(database.get_
 
 @router.post("/")
 async def create_tournament(tournament_data: dict, db: AsyncSession = Depends(database.get_db)):
+    print("-------------------------------- CREATE TOURNAMENT --------------------------------")
+    print(tournament_data)
+    print("-------------------------------- XXXXXXXXXXXXXXXXX --------------------------------")
     try:
         # Insert tournament data
         tournament_query = text("""
