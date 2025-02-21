@@ -1,6 +1,6 @@
 import mimetypes
 import os
-from fastapi import FastAPI, UploadFile, File, HTTPException, Depends
+from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, Request
 from typing import Optional, List
 
 from fastapi.responses import FileResponse
@@ -27,6 +27,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.middleware("http")
+async def log_request_origin(request: Request, call_next):
+    origin = request.headers.get("origin")
+    print(f"Yo 🤸‍♀️ > Request Origin: {origin}")
+    response = await call_next(request)
+    return response
 
 @app.get("/")
 async def read_root():
