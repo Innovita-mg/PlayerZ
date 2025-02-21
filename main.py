@@ -34,7 +34,7 @@ async def log_request_origin_and_ip(request: Request, call_next):
     client_ip = request.client.host
     # print(f"YO : Request Origin: {origin}, Client IP: {client_ip}")
     print("--------------------------------")
-    print(request)
+    print(request.headers)
     print("--------------------------------")
     response = await call_next(request)
     return response
