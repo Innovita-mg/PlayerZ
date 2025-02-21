@@ -28,16 +28,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.middleware("http")
-async def log_request_origin_and_ip(request: Request, call_next):
-    origin = request.headers.get("origin")
-    client_ip = request.client.host
-    # print(f"YO : Request Origin: {origin}, Client IP: {client_ip}")
-    print("--------------------------------")
-    print(request.headers)
-    print("--------------------------------")
-    response = await call_next(request)
-    return response
+# @app.middleware("http")
+# async def log_request_origin_and_ip(request: Request, call_next):
+#     origin = request.headers.get("origin")
+#     client_ip = request.client.host
+#     print(f"YO : Request Origin: {origin}, Client IP: {client_ip}")
+#     print("--------------------------------")
+#     print(request.headers)
+#     print("--------------------------------")
+#     response = await call_next(request)
+#     return response
 
 @app.get("/")
 async def read_root():

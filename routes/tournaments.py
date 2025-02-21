@@ -174,9 +174,15 @@ async def create_tournament(tournament_data: dict, db: AsyncSession = Depends(da
         # Enrich tournament data
         enriched_data = await enrich_tournament_data(new_tournament_id, db)
 
+        print("-------------------------------- SUCCESS --------------------------------")
+        print(enriched_data)
+        print("-------------------------------- SUCCESS --------------------------------")
         return {"message": "SUCCESS", "tournament_data": enriched_data}
 
     except Exception as e:
+        print("-------------------------------- ERROR --------------------------------")
+        print(e)
+        print("-------------------------------- ERROR --------------------------------")
         return {"error": str(e)}
     
 
