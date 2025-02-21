@@ -32,7 +32,10 @@ app.add_middleware(
 async def log_request_origin_and_ip(request: Request, call_next):
     origin = request.headers.get("origin")
     client_ip = request.client.host
-    print(f"YO : Request Origin: {origin}, Client IP: {client_ip}")
+    # print(f"YO : Request Origin: {origin}, Client IP: {client_ip}")
+    print("--------------------------------")
+    print(request)
+    print("--------------------------------")
     response = await call_next(request)
     return response
 
