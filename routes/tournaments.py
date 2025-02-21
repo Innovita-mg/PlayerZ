@@ -132,8 +132,9 @@ async def create_tournament(tournament_data: dict, db: AsyncSession = Depends(da
         new_tournament_id = result.scalar()
 
         # Insert players
-        player_ids = tournament_data.get("players", [])
-        for player_id in player_ids:
+        player_dicts = tournament_data.get("players", [])
+        for player in player_dicts:
+            player_id = player["id"]  # Extract the player ID
             player_query = text("""
                 INSERT INTO playerz.tournament_players (tournament_id, player_id) 
                 VALUES (:tournament_id, :player_id)
