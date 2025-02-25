@@ -37,10 +37,10 @@ async def get_tournament_ranking(id: int, db: AsyncSession = Depends(database.ge
         """
     )
     result = await db.execute(query, {"id": id})
-    ranking = result.fetchone()
+    ranking = result.fetchall()
     columns = result.keys() 
-    ranking_dict = dict(zip(columns, ranking))
-    return {"message": "SUCCES", "ranking": ranking_dict}
+    ranking_list = [dict(zip(columns, ranking)) for ranking in ranking]
+    return {"message": "SUCCES", "ranking": ranking_list}
 
 
 @router.get("/{id}")
