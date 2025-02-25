@@ -70,7 +70,7 @@ async def get_tournament_by_id(id: int, db: AsyncSession = Depends(database.get_
     columns = result.keys()
     players_list = [dict(zip(columns, player)) for player in players]
 
-    query = text("SELECT id FROM playerz.sessions WHERE tournament_id = :id")
+    query = text("SELECT * FROM playerz.sessions WHERE tournament_id = :id")
     result = await db.execute(query, {"id": id})
     sessions = result.fetchall()
 
