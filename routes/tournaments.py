@@ -29,6 +29,19 @@ async def get_all_tournaments(db: AsyncSession = Depends(database.get_db)):
     tournaments_list = [dict(zip(columns, tournament)) for tournament in tournaments]
     return {"message": "SUCCES", "tournaments": tournaments_list}
 
+@router.get("/{id}/ranking")
+async def get_tournament_ranking(id: int, db: AsyncSession = Depends(database.get_db)):
+    query = text(
+        """
+        SELECT * FROM get_tournament_ranking(:id);
+        """
+    )
+    result = await db.execute(query, {"id": id})
+    ranking = result.fetchone()
+    columns = result.keys() 
+    ranking_dict = dict(zip(columns, ranking))
+    return {"message": "SUCCES", "ranking": ranking_dict}
+
 
 @router.get("/{id}")
 async def get_tournament_by_id(id: int, db: AsyncSession = Depends(database.get_db)):
