@@ -7,10 +7,8 @@ from datetime import datetime, timedelta
 
 router = APIRouter()
 
-
-def row_to_dict(row: Row) -> dict:
-    return {column: getattr(row, column) for column in row.keys()}
-
+async def row_to_dict(row):
+    return dict(row._mapping)
 
 @router.get("/")
 async def get_all_tournaments(db: AsyncSession = Depends(database.get_db)):
@@ -19,6 +17,7 @@ async def get_all_tournaments(db: AsyncSession = Depends(database.get_db)):
     tournaments = result.fetchall()
     tournaments_list = [row_to_dict(tournament) for tournament in tournaments]
     return {"tournaments": tournaments_list}
+
 
 
 @router.get("/{id}")
