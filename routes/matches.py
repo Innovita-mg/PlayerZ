@@ -64,7 +64,9 @@ async def update_match(id: int, match_data: dict, db: AsyncSession = Depends(dat
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="MATCH_NOT_FOUND"
             )
-        return {"message": "MATCH_UPDATED", "match": updated_match}
+        columns = result.keys()
+        match_dict = dict(zip(columns, updated_match))
+        return {"message": "MATCH_UPDATED", "match": match_dict}
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
@@ -81,7 +83,9 @@ async def delete_match(id: int, db: AsyncSession = Depends(database.get_db)):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="MATCH_NOT_FOUND"
             )
-        return {"message": "MATCH_DELETED", "match": deleted_match}
+        columns = result.keys()
+        match_dict = dict(zip(columns, deleted_match))
+        return {"message": "MATCH_DELETED", "match": match_dict}
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
