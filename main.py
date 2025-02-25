@@ -9,6 +9,7 @@ from routes.players import router as players_router
 from routes.groupes import router as groupes_router
 from routes.tournaments import router as tournaments_router
 from routes.games import router as games_router
+from routes.matches import router as matches_router
 from datetime import datetime, UTC
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -17,6 +18,7 @@ app.include_router(players_router, prefix="/players")
 app.include_router(groupes_router, prefix="/groupes")
 app.include_router(tournaments_router, prefix="/tournaments")
 app.include_router(games_router, prefix="/games")
+app.include_router(matches_router, prefix="/matches")
 
 app.add_middleware(
     CORSMiddleware,

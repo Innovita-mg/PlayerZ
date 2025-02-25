@@ -127,7 +127,7 @@ async def create_tournament(
         players = list(set(players))
 
         # Override the 'status' column with "pas commencé"
-        tournament_data["status"] = "pas commencé"
+        tournament_data["status"] = "Non commencé"
 
         # Insert tournament data
         keys = ", ".join(tournament_data.keys())
@@ -166,6 +166,7 @@ async def create_tournament(
         # Insert matches into matches table
         for match in matches:
             match["session_id"] = session_id_map.get(match["session_id"])
+            match["status"] = "Non commencé"
             match_query = text(
                 "INSERT INTO playerz.matches (session_id, t1j1, t1j2, t2j1, t2j2, terrain_name) "
                 "VALUES (:session_id, :t1j1, :t1j2, :t2j1, :t2j2, :terrain_name)"
