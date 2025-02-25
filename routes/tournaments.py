@@ -9,7 +9,7 @@ router = APIRouter()
 
 
 def row_to_dict(row: Row) -> dict:
-    return {column: value for column, value in row.items()}
+    return {column: getattr(row, column) for column in row.keys()}
 
 
 @router.get("/")
@@ -24,17 +24,17 @@ async def get_all_tournaments(db: AsyncSession = Depends(database.get_db)):
 @router.get("/{id}")
 async def get_tournament_by_id(id: int, db: AsyncSession = Depends(database.get_db)):
     query = text("SELECT * FROM playerz.tournaments where id = :id")
-    result = await db.execute(query)
+    result = await db.execute(query, {"id": id})
     tournament = result.fetchone()
     tournament_dict = row_to_dict(tournament) if tournament else None
 
     query = text("SELECT * FROM playerz.sessions where tournament_id = :id")
-    result = await db.execute(query)
+    result = await db.execute(query, {"id": id})
     sessions = result.fetchall()
     sessions_list = [row_to_dict(session) for session in sessions]
 
     query = text("SELECT * FROM playerz.matches where tournament_id = :id")
-    result = await db.execute(query)
+    result = await db.execute(query, {"id": id})
     matches = result.fetchall()
     matches_list = [row_to_dict(match) for match in matches]
 
