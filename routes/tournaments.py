@@ -8,16 +8,23 @@ from datetime import datetime, timedelta
 router = APIRouter()
 
 
-
 @router.get("/")
 async def get_all_tournaments(db: AsyncSession = Depends(database.get_db)):
-    query = text("SELECT * FROM playerz.tournaments")
-    result = await db.execute(query) 
-    tournaments = result.fetchall() 
-    
-    if  not tournaments:    
+    query = text(
+        """
+        SELECT *,
+            (select count(*) from playerz.tournament_players where tournament_id = t.id) 
+            as nb_joueurs 
+        FROM playerz.tournaments t 
+        ORDER BY id DESC
+    """
+    )
+    result = await db.execute(query)
+    tournaments = result.fetchall()
+
+    if not tournaments:
         return {"message": "TOURNAMENTS_NOT_FOUND", "tournaments": []}
-    
+
     columns = result.keys()
     tournaments_list = [dict(zip(columns, tournament)) for tournament in tournaments]
     return {"message": "SUCCES", "tournaments": tournaments_list}
@@ -26,37 +33,84 @@ async def get_all_tournaments(db: AsyncSession = Depends(database.get_db)):
 @router.get("/{id}")
 async def get_tournament_by_id(id: int, db: AsyncSession = Depends(database.get_db)):
 
-    query = text("SELECT * FROM playerz.tournaments WHERE id = :id")
+    query = text(
+        """
+        SELECT *,
+            (select count(*) from playerz.tournament_players where tournament_id = t.id) 
+            as nb_joueurs 
+        FROM playerz.tournaments t 
+        WHERE t.id = :id
+    """
+    )
     result = await db.execute(query, {"id": id})
     tournament = result.fetchone()
-    
+
     if not tournament:
-        return {"message": "TOURNAMENT_NOT_FOUND", "tournament": {}, "sessions": [], "matches": []}
-    
+        return {
+            "message": "TOURNAMENT_NOT_FOUND",
+            "tournament": {},
+            "sessions": [],
+            "matches": [],
+            "players": [],
+        }
+
     columns = result.keys()
     tournament_dict = dict(zip(columns, tournament))
+    
+    query = text(
+        """
+        SELECT * FROM playerz.players WHERE id IN (
+            SELECT player_id FROM playerz.tournament_players WHERE tournament_id = :id
+        )
+        """
+    )
+    result = await db.execute(query, {"id": id})
+    players = result.fetchall()
+
+    columns = result.keys()
+    players_list = [dict(zip(columns, player)) for player in players]
 
     query = text("SELECT id FROM playerz.sessions WHERE tournament_id = :id")
     result = await db.execute(query, {"id": id})
     sessions = result.fetchall()
 
     if not sessions:
-        return {"message": "SUCCES", "tournament": tournament_dict, "sessions": [], "matches": []}
-    
+        return {
+            "message": "SUCCES",
+            "tournament": tournament_dict,
+            "sessions": [],
+            "matches": [],
+            "players": players_list,
+        }
+
     columns = result.keys()
     sessions_list = [dict(zip(columns, session)) for session in sessions]
 
-    query = text("SELECT * FROM playerz.matches WHERE session_id IN (SELECT id FROM playerz.sessions WHERE tournament_id = :id)")
+    query = text(
+        "SELECT * FROM playerz.matches WHERE session_id IN (SELECT id FROM playerz.sessions WHERE tournament_id = :id)"
+    )
     result = await db.execute(query, {"id": id})
     matches = result.fetchall()
 
     if not matches:
-        return {"message": "SUCCES", "tournament": tournament_dict, "sessions": sessions_list, "matches": []}
-    
+        return {
+            "message": "SUCCES",
+            "tournament": tournament_dict,
+            "sessions": sessions_list,
+            "matches": [],
+            "players": players_list,
+        }
+
     columns = result.keys()
     matches_list = [dict(zip(columns, match)) for match in matches]
 
-    return {"message": "SUCCES", "tournament": tournament_dict, "sessions": sessions_list, "matches": matches_list}
+    return {
+        "message": "SUCCES",
+        "tournament": tournament_dict,
+        "sessions": sessions_list,
+        "matches": matches_list,
+        "players": players_list,
+    }
 
 
 @router.post("/")
