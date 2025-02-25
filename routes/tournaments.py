@@ -12,7 +12,7 @@ async def get_all_tournaments(db: AsyncSession = Depends(database.get_db)):
     query = text("SELECT * FROM playerz.tournaments")
     result = await db.execute(query)
     tournaments = result.fetchall()
-    return tournaments
+    return {"tournaments": tournaments}
 
 
 @router.get("/{id}")
