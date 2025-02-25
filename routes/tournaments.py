@@ -190,12 +190,11 @@ async def delete_tournament(id: int, db: AsyncSession = Depends(database.get_db)
         await db.commit()
         if deleted_tournament is None:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Tournoi non trouvé"
+                status_code=status.HTTP_404_NOT_FOUND, detail="TOURNAMENT_NOT_FOUND"
             )
-        return {
-            "message": "Tournoi supprimé avec succès",
-            "tournament": deleted_tournament,
-        }
+        columns = result.keys()
+        tournament_dict = dict(zip(columns, deleted_tournament))
+        return {"message": "TOURNAMENT_DELETED", "tournament": tournament_dict}
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
@@ -216,9 +215,11 @@ async def update_tournament(
         await db.commit()
         if updated_tournament is None:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Tournoi non trouvé"
+                status_code=status.HTTP_404_NOT_FOUND, detail="TOURNAMENT_NOT_FOUND"
             )
-        return updated_tournament
+        columns = result.keys()
+        tournament_dict = dict(zip(columns, updated_tournament))
+        return {"message": "TOURNAMENT_UPDATED", "tournament": tournament_dict}
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
