@@ -1,10 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import text
+from sqlalchemy.engine.row import Row
 import database
 from datetime import datetime, timedelta
 
 router = APIRouter()
+
+
+def row_to_dict(row: Row) -> dict:
+    return {column: value for column, value in row.items()}
 
 
 @router.get("/")
@@ -12,7 +17,8 @@ async def get_all_tournaments(db: AsyncSession = Depends(database.get_db)):
     query = text("SELECT * FROM playerz.tournaments")
     result = await db.execute(query)
     tournaments = result.fetchall()
-    return {"tournaments": tournaments}
+    tournaments_list = [row_to_dict(tournament) for tournament in tournaments]
+    return {"tournaments": tournaments_list}
 
 
 @router.get("/{id}")
@@ -20,15 +26,19 @@ async def get_tournament_by_id(id: int, db: AsyncSession = Depends(database.get_
     query = text("SELECT * FROM playerz.tournaments where id = :id")
     result = await db.execute(query)
     tournament = result.fetchone()
+    tournament_dict = row_to_dict(tournament) if tournament else None
 
     query = text("SELECT * FROM playerz.sessions where tournament_id = :id")
     result = await db.execute(query)
     sessions = result.fetchall()
+    sessions_list = [row_to_dict(session) for session in sessions]
 
     query = text("SELECT * FROM playerz.matches where tournament_id = :id")
     result = await db.execute(query)
     matches = result.fetchall()
-    return {"tournament": tournament, "sessions": sessions, "matches": matches}
+    matches_list = [row_to_dict(match) for match in matches]
+
+    return {"tournament": tournament_dict, "sessions": sessions_list, "matches": matches_list}
 
 
 @router.post("/")
