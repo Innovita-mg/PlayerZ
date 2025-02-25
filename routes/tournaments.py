@@ -13,7 +13,7 @@ async def row_to_dict(row):
         return None
     return dict(row._mapping)  # Utilisation de _mapping pour transformer en dict
 
-
+@router.get("/")
 async def get_all_tournaments(db: AsyncSession = Depends(database.get_db)):
     query = text("SELECT * FROM playerz.tournaments")
     result = await db.execute(query)  # Ajout du await
@@ -24,38 +24,34 @@ async def get_all_tournaments(db: AsyncSession = Depends(database.get_db)):
 
 @router.get("/{id}")
 async def get_tournament_by_id(id: int, db: AsyncSession = Depends(database.get_db)):
+    # Vérifier que `id` est bien reçu
+    if id is None:
+        raise HTTPException(status_code=400, detail="ID de tournoi requis")
+
     query = text("SELECT * FROM playerz.tournaments WHERE id = :id")
-    result = await db.execute(query)
+    result = await db.execute(query, {"id": id})
     tournament = await result.fetchone()
     tournament_dict = row_to_dict(tournament) if tournament else None
 
-    # Récupérer toutes les sessions liées au tournoi
+    # Récupérer les sessions du tournoi
     query = text("SELECT id FROM playerz.sessions WHERE tournament_id = :id")
     result = await db.execute(query, {"id": id})
-    session_ids = [
-        row[0] for row in await result.fetchall()
-    ]  # Liste des IDs de sessions
+    session_ids = [row[0] for row in await result.fetchall()]  # Liste des IDs de sessions
 
-    # Récupérer les détails des sessions
     query = text("SELECT * FROM playerz.sessions WHERE tournament_id = :id")
     result = await db.execute(query, {"id": id})
     sessions = await result.fetchall()
     sessions_list = [row_to_dict(session) for session in sessions]
 
-    # Récupérer les matches qui appartiennent aux sessions sélectionnées
-    if session_ids:  # Vérifier s'il y a des sessions associées
-        query = text("SELECT * FROM playerz.matches WHERE session_id IN :session_ids")
-        result = await db.execute(query, {"session_ids": tuple(session_ids)})
-        matches = await result.fetchall()
-        matches_list = [row_to_dict(match) for match in matches]
-    else:
-        matches_list = []
+    # Récupérer les matchs liés aux sessions trouvées
+    matches_list = []
+    if session_ids:
+        session_ids_tuple = tuple(session_ids) if len(session_ids) > 1 else f"({session_ids[0]})"
+        query = text(f"SELECT * FROM playerz.matches WHERE session_id IN {session_ids_tuple}")
+        result = await db.execute(query)
+        matches_list = [row_to_dict(match) for match in await result.fetchall()]
 
-    return {
-        "tournament": tournament_dict,
-        "sessions": sessions_list,
-        "matches": matches_list,
-    }
+    return {"tournament": tournament_dict, "sessions": sessions_list, "matches": matches_list}
 
 
 @router.post("/")
