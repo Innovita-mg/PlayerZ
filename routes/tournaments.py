@@ -29,6 +29,7 @@ async def get_all_tournaments(db: AsyncSession = Depends(database.get_db)):
     tournaments_list = [dict(zip(columns, tournament)) for tournament in tournaments]
     return {"message": "SUCCES", "tournaments": tournaments_list}
 
+
 @router.get("/{id}/ranking")
 async def get_tournament_ranking(id: int, db: AsyncSession = Depends(database.get_db)):
     query = text(
@@ -38,9 +39,31 @@ async def get_tournament_ranking(id: int, db: AsyncSession = Depends(database.ge
     )
     result = await db.execute(query, {"id": id})
     ranking = result.fetchall()
-    columns = result.keys() 
+    columns = result.keys()
     ranking_list = [dict(zip(columns, ranking)) for ranking in ranking]
     return {"message": "SUCCES", "ranking": ranking_list}
+
+
+@router.get("/sessions/{id}/in-tournament")
+async def get_session_by_id_tournament(
+    id: int, db: AsyncSession = Depends(database.get_db)
+):
+    query = text(
+        """
+        SELECT 
+        ROW_NUMBER() OVER (ORDER BY id) AS num, 
+        id 
+        FROM sessions 
+        WHERE tournament_id = :id;
+        """
+    )
+    result = await db.execute(query, {"id": id})
+    sessions = result.fetchall()
+    if not sessions:
+        return {"message": "SESSIONS_NOT_FOUND", "sessions": []}
+    columns = result.keys()
+    sessions_list = [dict(zip(columns, session)) for session in sessions]
+    return {"message": "SUCCESS", "sessions": sessions_list}
 
 
 @router.get("/{id}")
@@ -69,7 +92,7 @@ async def get_tournament_by_id(id: int, db: AsyncSession = Depends(database.get_
 
     columns = result.keys()
     tournament_dict = dict(zip(columns, tournament))
-    
+
     query = text(
         """
         SELECT * FROM playerz.players WHERE id IN (
