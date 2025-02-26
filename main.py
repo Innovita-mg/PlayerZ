@@ -12,6 +12,9 @@ from routes.games import router as games_router
 from routes.matches import router as matches_router
 from datetime import datetime, UTC
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
+
+
 
 app = FastAPI()
 app.include_router(players_router, prefix="/players")
@@ -20,6 +23,14 @@ app.include_router(tournaments_router, prefix="/tournaments")
 app.include_router(games_router, prefix="/games")
 app.include_router(matches_router, prefix="/matches")
 
+@app.middleware("http")
+async def remove_redirects(request: Request, call_next):
+    response = await call_next(request)
+    if response.status_code == 307:
+        response.status_code = 200  # Remplace la redirection par un succès
+    return response
+    
+app.add_middleware(HTTPSRedirectMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
