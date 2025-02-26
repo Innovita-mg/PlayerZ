@@ -18,6 +18,17 @@ async def get_all_matches(db: AsyncSession = Depends(database.get_db)):
     matches_list = [dict(zip(columns, match)) for match in matches]
     return {"message": "SUCCESS", "matches": matches_list}
 
+@router.get("/{id}/in-tournament")
+async def get_match_by_id_tournament(id: int, db: AsyncSession = Depends(database.get_db)):
+    query = text("select * from matches where session_id in (select id from sessions where tournament_id = :id)")
+    result = await db.execute(query, {"id": id})
+    matches = result.fetchall()
+    if not matches:
+        return {"message": "MATCHES_NOT_FOUND", "matches": []}
+    columns = result.keys()
+    matches_list = [dict(zip(columns, match)) for match in matches]
+    return {"message": "SUCCESS", "matches": matches_list}
+
 @router.get("/{id}")
 async def get_match_by_id(id: int, db: AsyncSession = Depends(database.get_db)):
     query = text("SELECT * FROM playerz.matches WHERE id = :id")
