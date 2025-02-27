@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import text
 import database
+from pydantic import BaseModel
 
 router = APIRouter()
 
@@ -100,4 +101,47 @@ async def delete_match(id: int, db: AsyncSession = Depends(database.get_db)):
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+
+class ScoreUpdate(BaseModel):
+    score: int
+
+@router.put("/{id}/score/{team_number}")
+async def update_match_score(
+    id: int, 
+    team_number: int, 
+    score_data: ScoreUpdate,
+    db: AsyncSession = Depends(database.get_db)
+):
+    try:
+        if team_number not in [1, 2]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="TEAM_NUMBER_MUST_BE_1_OR_2"
+            )
+        
+        column_name = "score_team_one" if team_number == 1 else "score_team_two"
+        query = text(
+            f"UPDATE playerz.matches SET {column_name} = :score "
+            "WHERE id = :id RETURNING *"
+        )
+        
+        result = await db.execute(query, {"score": score_data.score, "id": id})
+        updated_match = result.fetchone()
+        await db.commit()
+        
+        if updated_match is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="MATCH_NOT_FOUND"
+            )
+            
+        columns = result.keys()
+        match_dict = dict(zip(columns, updated_match))
+        return {"message": "MATCH_SCORE_UPDATED", "match": match_dict}
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
         ) 

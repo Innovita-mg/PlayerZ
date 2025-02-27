@@ -13,8 +13,9 @@ from routes.matches import router as matches_router
 from datetime import datetime, UTC
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
+from dotenv import load_dotenv
 
-
+load_dotenv()
 
 app = FastAPI()
 app.include_router(players_router, prefix="/players")
@@ -23,7 +24,13 @@ app.include_router(tournaments_router, prefix="/tournaments")
 app.include_router(games_router, prefix="/games")
 app.include_router(matches_router, prefix="/matches")
 
-app.add_middleware(HTTPSRedirectMiddleware)
+if os.getenv('ENVIRONEMENT') == 'LOCAL':
+    print("ENVIRONEMENT IS LOCAL")
+    pass
+else:
+    print("ENVIRONEMENT IS ONLINE")
+    app.add_middleware(HTTPSRedirectMiddleware)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
